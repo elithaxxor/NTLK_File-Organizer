@@ -1,17 +1,18 @@
-import os, sys, re
+import os, sys, re, csv
+from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 
 # Define cybersecurity categories and expanded training data
 categories = [
-    "Scanner", 
-    "Exploitation", 
-    "Web_Tools", 
-    "Password_Cracking", 
-    "Sniffing", 
-    "Encryption", 
-    "Network_Defense", 
+    "Scanner",
+    "Exploitation",
+    "Web_Tools",
+    "Password_Cracking",
+    "Sniffing",
+    "Encryption",
+    "Network_Defense",
     "Other"
 ]
 
@@ -106,3 +107,45 @@ predicted_categories = model.predict(file_contents)
 print("File Categorization Results:")
 for i, filename in enumerate(file_names):
     print(f"{filename}: {predicted_categories[i]}")
+    
+# Save results to CSV file
+import csv
+from fpdf import FPDF
+
+with open('results.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["File Name", "Category"])
+    for i, filename in enumerate(file_names):
+        writer.writerow([filename, predicted_categories[i]])
+
+# Save results to PDF file
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font("Arial", size = 15)
+pdf.cell(200, 10, txt = "File Categorization Results", ln = True, align = 'C')
+pdf.ln(10)
+for i, filename in enumerate(file_names):
+    pdf.cell(200, 10, txt = f"{filename}: {predicted_categories[i]}", ln = True, align = 'L')
+# Save results to PDF file
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font("Arial", size = 15)
+pdf.cell(200, 10, txt = "File Categorization Results", ln = True, align = 'C')
+pdf.ln(10)
+for i, filename in enumerate(file_names):
+    pdf.cell(200, 10, txt = f"{filename}: {predicted_categories[i]}", ln = True, align = 'L')
+
+
+
+with open('results.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["File Name", "Category"])
+    for i, filename in enumerate(file_names):
+        writer.writerow([filename, predicted_categories[i]])
+
+# Save results to PDF file
+try:
+    pdf.output(f"results_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pdf")
+except excpetion as e: 
+    print("debug this" , e)
+    pdf.output(f"results_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pdf")
