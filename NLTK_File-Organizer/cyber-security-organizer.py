@@ -2,17 +2,19 @@ import os
 import sys
 import re
 import csv
-import shutil  # Import the shutil module for file operations
+import shutil
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 from fpdf import FPDF
-
+import magic  # For file type detection
+import json
 
 class CybersecurityFileCategorizer:
     """
-    A class to categorize files based on their content using machine learning.
+    A class to categorize files based on their content using machine learning,
+    analyze file metadata, and generate reports.
     """
 
     def __init__(self, categories, training_data, input_directory="./files_to_categorize"):
@@ -28,6 +30,7 @@ class CybersecurityFileCategorizer:
         self.training_data = training_data
         self.input_directory = input_directory
         self.model = self._train_model()
+        self.file_metadata = {}  # Dictionary to store file metadata
 
     def _preprocess_text(self, text):
         """
@@ -163,6 +166,67 @@ class CybersecurityFileCategorizer:
             except Exception as e:
                 print(f"Error {action}ing '{filename}': {e}")
 
+    def _extract_metadata(self, filepath):
+        """
+        Extracts metadata from a file.
+
+        Args:
+            filepath (str): Path to the file.
+
+        Returns:
+            dict: A dictionary containing file metadata.
+        """
+        try:
+            file_type = magic.from_file(filepath)
+            file_size = os.path.getsize(filepath)
+            creation_time = os.path.getctime(filepath)
+            modification_time = os.path.getmtime(filepath)
+            return {
+                "file_type": file_type,
+                "file_size": file_size,
+                "creation_time": datetime.fromtimestamp(creation_time).strftime('%Y-%m-%d %H:%M:%S'),
+                "modification_time": datetime.fromtimestamp(modification_time).strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        except Exception as e:
+            print(f"Error extracting metadata from '{filepath}': {e}")
+            return {}
+
+    def analyze_files(self):
+        """
+        Analyzes files in the input directory, extracts metadata, and generates a report.
+
+        Returns:
+            dict: A dictionary containing analysis results, including metadata and categorization.
+        """
+        analysis_results = {}
+        categorization_results = self.categorize_files()
+
+        for filename in os.listdir(self.input_directory):
+            filepath = os.path.join(self.input_directory, filename)
+            if os.path.isfile(filepath):
+                metadata = self._extract_metadata(filepath)
+                self.file_metadata[filename] = metadata
+                analysis_results[filename] = {
+                    "metadata": metadata,
+                    "category": categorization_results.get(filename, "Unknown"),
+                }
+
+        return analysis_results
+
+    def generate_analysis_report(self, analysis_results, report_filename="analysis_report.json"):
+        """
+        Generates a report of the file analysis and saves it to a JSON file.
+
+        Args:
+            analysis_results (dict): The results of the file analysis.
+            report_filename (str): The name of the JSON file to save the report to.
+        """
+        try:
+            with open(report_filename, 'w') as f:
+                json.dump(analysis_results, f, indent=4)
+            print(f"Analysis report saved to '{report_filename}'.")
+        except Exception as e:
+            print(f"Error generating analysis report: {e}")
 
 # Define cybersecurity categories and expanded training data
 categories = [
@@ -224,25 +288,53 @@ training_data = {
     ]
 }
 
-# Example usage
-if __name__ == "__main__":
+def main():
     categorizer = CybersecurityFileCategorizer(categories, training_data)
-    results = categorizer.categorize_files()
 
-    print("File Categorization Results:")
-    for filename, category in results.items():
-        print(f"{filename}: {category}")
-
-    categorizer.save_results_to_csv(results)
-    categorizer.save_results_to_pdf(results)
-
-    # Ask the user if they want to copy or move the files
     while True:
-        action = input("Do you want to (copy) or (move) the files to their respective category folders? (copy/move/no): ").lower()
-        if action in ["copy", "move", "no"]:
+        print("\nCybersecurity File Organizer Menu:")
+        print("1. Categorize Files")
+        print("2. Analyze Files")
+        print("3. Exit")
+
+        choice = input("Enter your choice (1/2/3): ")
+
+        if choice == '1':
+            results = categorizer.categorize_files()
+            print("\nFile Categorization Results:")
+            for filename, category in results.items():
+                print(f"{filename}: {category}")
+
+            categorizer.save_results_to_csv(results)
+            categorizer.save_results_to_pdf(results)
+
+            # Ask the user if they want to copy or move the files
+            while True:
+                action = input("Do you want to (copy) or (move) the files to their respective category folders? (copy/move/no): ").lower()
+                if action in ["copy", "move", "no"]:
+                    break
+                else:
+                    print("Invalid input. Please enter 'copy', 'move', or 'no'.")
+
+            if action != "no":
+                categorizer.move_or_copy_files(results, action)
+
+        elif choice == '2':
+            analysis_results = categorizer.analyze_files()
+            print("\nFile Analysis Results:")
+            for filename, data in analysis_results.items():
+                print(f"\nFilename: {filename}")
+                print(f"  Category: {data['category']}")
+                print("  Metadata:")
+                for key, value in data['metadata'].items():
+                    print(f"    {key}: {value}")
+            categorizer.generate_analysis_report(analysis_results)
+
+        elif choice == '3':
+            print("Exiting program.")
             break
         else:
-            print("Invalid input. Please enter 'copy', 'move', or 'no'.")
+            print("Invalid choice. Please enter 1, 2, or 3.")
 
-    if action != "no":
-        categorizer.move_or_copy_files(results, action)
+if __name__ == "__main__":
+    main()
