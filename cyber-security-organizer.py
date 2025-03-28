@@ -4,34 +4,60 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 
-
-
-print("Cyber Security Organizer")
-print("This program categorizes text files based on their content. Verify the results to ensure accuracy.")
-print("How It Works: \n 1.	Categories: The script uses your specified categories: `Scanner`, `Exploitation`, `Web_Tools`, `Password_Cracking`, `Sniffing`, and `Other`. \n 2.	Training Data: Example sentences for each category are provided as training data. You can expand this dataset with more examples. \n 3.	Text Preprocessing: Files are cleaned by removing special characters and converting text to lowercase. \n 4.	Classifier: A pipeline combining TF-IDF vectorization and Naive Bayes classification is trained on the example data. \n5.	File Categorization: The script reads `.txt` files from the specified directory, processes their content, and predicts their categories" )
-# Define cybersecurity categories and example training data
-categories = ["Scanner", "Exploitation", "Web_Tools", "Password_Cracking", "Sniffing", "Other"]
+# Define cybersecurity categories and expanded training data
+categories = [
+    "Scanner",
+    "Exploitation",
+    "Web_Tools",
+    "Password_Cracking",
+    "Sniffing",
+    "Encryption",
+    "Network_Defense",
+    "Other"
+]
 
 training_data = {
     "Scanner": [
         "Nmap is a network scanning tool used for discovering hosts and services.",
-        "Masscan performs fast port scanning across large networks."
+        "Masscan performs fast port scanning across large networks.",
+        "Shodan scans and indexes devices connected to the internet.",
+        "TheHarvester gathers information about domains and emails."
     ],
     "Exploitation": [
         "Metasploit is a framework for developing and executing exploits.",
-        "Various exploits target vulnerabilities in systems and applications."
+        "SQLMap automates SQL injection attacks.",
+        "Cobalt Strike is used for post-exploitation activities.",
+        "Empire specializes in exploitation and lateral movement."
     ],
     "Web_Tools": [
         "Burp Suite is used for web application security testing.",
-        "DirBuster helps find hidden directories and files on web servers."
+        "Nikto scans web servers for vulnerabilities.",
+        "OWASP ZAP helps identify security issues in web applications.",
+        "WPScan scans WordPress sites for vulnerabilities."
     ],
     "Password_Cracking": [
         "Hydra is a tool for brute-force password cracking.",
-        "John the Ripper cracks passwords using dictionary attacks."
+        "John the Ripper cracks passwords using dictionary attacks.",
+        "Hashcat is a high-performance password recovery tool.",
+        "Cain & Abel recovers passwords using cryptanalysis."
     ],
     "Sniffing": [
         "Wireshark analyzes network traffic by capturing packets.",
-        "Tcpdump is a command-line tool for packet analysis."
+        "Tcpdump is a command-line tool for packet analysis.",
+        "Kismet detects wireless networks and captures packets.",
+        "Aircrack-ng cracks WEP and WPA keys from captured packets."
+    ],
+    "Encryption": [
+        "VeraCrypt encrypts files and drives securely.",
+        "AxCrypt provides simple file encryption.",
+        "Tor ensures anonymity through encrypted traffic routing.",
+        "NordLocker encrypts files for secure storage."
+    ],
+    "Network_Defense": [
+        "Snort detects intrusions in network traffic.",
+        "Suricata provides real-time intrusion detection and prevention.",
+        "pfSense secures networks with firewall capabilities.",
+        "AlienVault OSSIM combines SIEM and network monitoring."
     ],
     "Other": [
         "This file does not match any specific category of cybersecurity tools."
@@ -56,7 +82,6 @@ for category, texts in training_data.items():
 model = make_pipeline(TfidfVectorizer(), MultinomialNB())
 model.fit(X_train, y_train)
 
-# Directory containing files to categorize
 input_directory = "./files_to_categorize"  # Replace with your directory path
 
 # Function to load files from a directory
